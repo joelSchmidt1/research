@@ -36,13 +36,13 @@ from types import *
 
 from datetime import datetime, date, time
 
-ids = [''] # enter your search terms, separated by commmas. These can be user names or keywords.
+ids = ['honorabletech'] # enter your search terms, separated by commmas. These can be user names or keywords.
        
 from twython import Twython #get app keys from Twitter by registering at dev.twitter.com/apps
-t = Twython(app_key='',
-    app_secret='',
-    oauth_token='',
-    oauth_token_secret='')
+t = Twython(app_key='g4ivCiTluluiYyVd6cmymjl0k',
+    app_secret='ES1NsDULRUzNUP5Cesu5JphJAdv0rjMWh3ETtQSMBBGVIxqJpS',
+    oauth_token='726513149499707392-bVA1ro9JsNoiL8rU3CuFrWxFjbBgbf1',
+    oauth_token_secret='bsGxazylt6SUmD5BJh0rMcsxBkK7O5P7Mrw4mF3bgO7vS')
 
 Base = declarative_base()
 
@@ -252,14 +252,57 @@ class Scrape:
                 continue	 
             
             if len(d['statuses'])==0:
-                print "THERE WERE NO STATUSES RETURNED........MOVING TO NEXT ID"
+                print "No statuses returned. Moving to next ID."
                 continue
                 
             write_data(self, d) 
 
             self.session.commit() 
+                    
+            last_status = d['statuses'][-1]
+            min_id = last_status['id']
+            
+            max_id = min_id-1        
+            print 'THIS IS THE min_id IN THE CURRENT SET OF TWEETS: ', max_id
+           
+            if len(d['statuses']) >1:
+          
+                print " >=1 status found. Digging deeper."
+              
+                count = 2
+                while count < 50:
+                    print "Starting page ", count
+                    d = get_data(kid, max_id)
+                    
+                    if not d:
+                        break
+                    elif not d['statuses']:
+                        
+                        break	
+                    
+                    last_status = d['statuses'][-1]
+                    min_id = last_status['id']
+                
+                  
+                    max_id = min_id-1
+                    print 'THIS IS THE min_id IN THE CURRENT SET OF TWEETS: ', max_id
+                   
+                    
+                    if not d:
+                        continue	       
 
-
+                    write_data(self, d) 
+                    self.session.commit()
+                    
+                    print "Finished page.", len(d['statuses']), count
+                    if not len(d['statuses']) > 0:
+    
+                        print "Last page reached."
+                        break                    
+                    count += 1
+                    if count >50:
+                        print "50 PAGES REACHED. TERMINATING."
+                        break
             self.session.commit()
 
 
